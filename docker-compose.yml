@@ -1,33 +1,43 @@
 services:
-  db:
-    image: postgres:latest
-    restart: always
-    volumes:
-      - "/data/metabase/pgdata:/var/lib/postgresql/data"
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  metabase:
-    image: metabase/metabase:latest
-    restart: always
-    deploy:
-      resources:
-        limits:
-          cpus: '0.001'
-          memory: 512M
-    volumes:
-      - "/data/metabase/metabase-data:/metabase-data"
-    environment:
-      MB_DB_TYPE: postgres
-      MB_DB_HOST: db
-      MB_DB_PORT: 5432
-      MB_DB_DBNAME: ${POSTGRES_DB}
-      MB_DB_USER: ${POSTGRES_USER}
-      MB_DB_PASS: ${POSTGRES_PASSWORD}
-    ports:
-      - "3000:3000"
-    depends_on:
-      - db
-    links:
-      - db
+    db:
+        image: postgres:latest
+        restart: always
+        volumes:
+            - metabase-postgres-data:/var/lib/postgresql/data
+        environment:
+            POSTGRES_DB: ${POSTGRES_DB}
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    metabase:
+        image: metabase/metabase:latest
+        restart: always
+        deploy:
+            resources:
+                limits:
+                    cpus: ${CPU_LIMIT}
+                    memory: ${MEMORY_LIMIT}
+                reservations:
+                    cpus: ${CPU_RESERVE}
+                    memory: ${MEMORY_RESERVE}
+        volumes:
+            - metabase-data:/metabase-data
+        environment:
+            MB_DB_TYPE: postgres
+            MB_DB_HOST: db
+            MB_DB_PORT: 5432
+            MB_DB_DBNAME: ${POSTGRES_DB}
+            MB_DB_USER: ${POSTGRES_USER}
+            MB_DB_PASS: ${POSTGRES_PASSWORD}
+        ports:
+            - "3000:3000"
+        depends_on:
+            - db
+        links:
+            - db
+volumes:
+    metabase-postgres-data:
+    metabase-data:
+networks:
+    default:
+        external: true
+        name: ${NETWORK}
